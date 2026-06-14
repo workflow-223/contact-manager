@@ -13,7 +13,7 @@ Full-stack contact management app with a CLI tool, Tkinter GUI, and REST API HTT
 The web UI is deployed to GitHub Pages at:
 `https://workflow-223.github.io/contact-manager/`
 
-**Setup:** In repo Settings → Pages → Source: **Deploy from a branch**, branch: `main`, folder: `/static`.
+**Setup:** In repo Settings → Pages → Source: **Deploy from a branch**, branch: `main`, folder: `/docs`.
 
 Note: The web UI is a static frontend. For full functionality (CLI, GUI, REST API), run locally with Python 3.
 
