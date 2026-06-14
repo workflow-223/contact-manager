@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Contact Manager</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #07070e;
+    color: #e0e0ee;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(0, 240, 255, 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(124, 58, 237, 0.04) 0%, transparent 50%);
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2a3e; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a5e; }
+
+  header {
+    padding: 24px 32px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #00f0ff, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo span { font-weight: 300; color: #4a4a6a; -webkit-text-fill-color: #4a4a6a; }
+
+  .search-wrap {
+    flex: 1;
+    max-width: 400px;
+    min-width: 200px;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 1px solid #1e1e32;
+    border-radius: 10px;
+    background: #0d0d1a;
+    color: #e0e0ee;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .25s, box-shadow .25s;
+  }
+  .search-wrap input:focus {
+    border-color: #00f0ff;
+    box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.1);
+  }
+  .search-wrap input::placeholder { color: #3a3a5a; }
+  .search-icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: #3a3a5a; font-size: 16px; pointer-events: none;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: transform .15s, box-shadow .2s, background .2s;
+    text-decoration: none; white-space: nowrap;
+  }
+  .btn:active { transform: scale(.96); }
+  .btn-primary {
+    background: linear-gradient(135deg, #00c8d4, #7c3aed);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(0, 200, 212, 0.25);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 30px rgba(0, 200, 212, 0.45);
+  }
+  .btn-danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+  .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+  .btn-ghost {
+    background: rgba(255,255,255,0.04);
+    color: #8a8aaa;
+    border: 1px solid #1e1e32;
+  }
+  .btn-ghost:hover {
+    background: rgba(255,255,255,0.08);
+    color: #c0c0d0;
+  }
+  .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 8px; }
+
+  .toolbar {
+    padding: 16px 32px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+
+  .stats {
+    padding: 0 32px 16px;
+    font-size: 13px;
+    color: #5a5a7a;
+  }
+
+  .grid {
+    flex: 1;
+    padding: 0 32px 32px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 12px;
+    align-content: start;
+  }
+
+  .card {
+    background: rgba(13, 13, 26, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid #1a1a30;
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color .25s, box-shadow .25s, transform .2s;
+  }
+  .card:hover {
+    border-color: #2a2a4e;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #00c8d4, #7c3aed);
+  }
+
+  .info { flex: 1; min-width: 0; }
+  .info .name {
+    font-size: 15px; font-weight: 600; color: #e8e8f4;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .info .detail {
+    font-size: 13px; color: #6a6a8a;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .info .detail + .detail { margin-top: 1px; }
+  .info .detail i { width: 18px; display: inline-block; opacity: .5; }
+
+  .card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .modal {
+    background: #0f0f20;
+    border: 1px solid #1e1e36;
+    border-radius: 18px;
+    padding: 32px;
+    width: 440px;
+    max-width: 94vw;
+    transform: scale(.92) translateY(20px);
+    transition: transform .25s;
+  }
+  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+  .modal h2 {
+    font-size: 20px; font-weight: 700;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #00f0ff, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: #6a6a8a; margin-bottom: 5px; text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .field input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #1e1e36;
+    border-radius: 10px;
+    background: #0a0a18;
+    color: #e0e0ee;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .25s, box-shadow .25s;
+  }
+  .field input:focus {
+    border-color: #00f0ff;
+    box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.08);
+  }
+  .field input.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+  .field input::placeholder { color: #3a3a5a; }
+  .field .error-text {
+    font-size: 11px; color: #ef4444; margin-top: 4px; display: none;
+  }
+  .field .error-text.show { display: block; }
+
+  .modal-actions {
+    display: flex; gap: 10px;
+    margin-top: 24px; justify-content: flex-end;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    grid-column: 1 / -1;
+  }
+  .empty-state .icon {
+    font-size: 48px; margin-bottom: 16px; opacity: .3;
+  }
+  .empty-state h3 {
+    font-size: 18px; color: #5a5a7a; font-weight: 500;
+  }
+  .empty-state p {
+    font-size: 13px; color: #3a3a5a; margin-top: 6px;
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 16px 16px 0; }
+    .toolbar { padding: 12px 16px; }
+    .stats { padding: 0 16px 12px; }
+    .grid { padding: 0 16px 16px; grid-template-columns: 1fr; }
+    .modal { padding: 20px; }
+    .logo { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NEXUS <span>CONTACTS</span></div>
+  <div class="search-wrap">
+    <span class="search-icon">&#128269;</span>
+    <input type="text" id="search" placeholder="Search contacts..." autocomplete="off">
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn btn-primary" id="addBtn">+ Add Contact</button>
+  <button class="btn btn-ghost" id="refreshBtn">&#8635; Refresh</button>
+</div>
+
+<div class="stats"><span id="count">0</span> contacts</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">New Contact</h2>
+    <div class="field">
+      <label for="inpName">Name</label>
+      <input type="text" id="inpName" placeholder="Full name" autocomplete="off">
+      <div class="error-text" id="nameError">Name is required</div>
+    </div>
+    <div class="field">
+      <label for="inpPhone">Phone</label>
+      <input type="text" id="inpPhone" placeholder="Phone number" autocomplete="off">
+      <div class="error-text" id="phoneError"></div>
+    </div>
+    <div class="field">
+      <label for="inpEmail">Email</label>
+      <input type="email" id="inpEmail" placeholder="name@example.com" autocomplete="off">
+      <div class="error-text" id="emailError"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn">Save Contact</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const grid = document.getElementById('grid');
+const search = document.getElementById('search');
+const count = document.getElementById('count');
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modalTitle');
+const inpName = document.getElementById('inpName');
+const inpPhone = document.getElementById('inpPhone');
+const inpEmail = document.getElementById('inpEmail');
+const nameError = document.getElementById('nameError');
+const phoneError = document.getElementById('phoneError');
+const emailError = document.getElementById('emailError');
+const cancelBtn = document.getElementById('cancelBtn');
+const saveBtn = document.getElementById('saveBtn');
+const addBtn = document.getElementById('addBtn');
+const refreshBtn = document.getElementById('refreshBtn');
+
+let editingId = null;
+let contacts = [];
+
+function api(path, opts = {}) {
+  return fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  }).then(r => {
+    if (!r.ok) return r.json().then(e => Promise.reject(e));
+    return r.json();
+  });
+}
+
+function loadContacts() {
+  const q = search.value.trim();
+  const url = q ? `/api/contacts?q=${encodeURIComponent(q)}` : '/api/contacts';
+  api(url).then(data => {
+    contacts = data;
+    render();
+  }).catch(console.error);
+}
+
+function render() {
+  grid.innerHTML = '';
+  count.textContent = contacts.length;
+
+  if (contacts.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = `
+      <div class="icon">&#128100;</div>
+      <h3>${search.value.trim() ? 'No matching contacts' : 'No contacts yet'}</h3>
+      <p>${search.value.trim() ? 'Try a different search term.' : 'Click "Add Contact" to get started.'}</p>
+    `;
+    grid.appendChild(empty);
+    return;
+  }
+
+  const colors = [
+    ['#00c8d4', '#7c3aed'],
+    ['#f59e0b', '#ef4444'],
+    ['#10b981', '#3b82f6'],
+    ['#ec4899', '#8b5cf6'],
+    ['#14b8a6', '#6366f1'],
+  ];
+
+  contacts.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const initials = (c.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+    const clr = colors[i % colors.length];
+
+    card.innerHTML = `
+      <div class="avatar" style="background:linear-gradient(135deg,${clr[0]},${clr[1]})">${initials}</div>
+      <div class="info">
+        <div class="name">${esc(c.name)}</div>
+        <div class="detail"><i>&#128222;</i> ${esc(c.phone || '—')}</div>
+        <div class="detail"><i>&#9993;</i> ${esc(c.email || '—')}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-danger btn-sm" data-id="${c.id}">&#128465; Delete</button>
+      </div>
+    `;
+
+    card.querySelector('[data-id]').addEventListener('click', e => {
+      e.stopPropagation();
+      deleteContact(c.id);
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function clearErrors() {
+  [inpName, inpPhone, inpEmail].forEach(el => el.classList.remove('error'));
+  [nameError, phoneError, emailError].forEach(el => el.classList.remove('show'));
+}
+
+function showError(inputEl, errorEl, msg) {
+  inputEl.classList.add('error');
+  errorEl.textContent = msg;
+  errorEl.classList.add('show');
+}
+
+function openModal(contact = null) {
+  editingId = contact ? contact.id : null;
+  modalTitle.textContent = contact ? 'Edit Contact' : 'New Contact';
+  inpName.value = contact ? contact.name : '';
+  inpPhone.value = contact ? (contact.phone || '') : '';
+  inpEmail.value = contact ? (contact.email || '') : '';
+  saveBtn.textContent = contact ? 'Update' : 'Save Contact';
+  clearErrors();
+  modal.classList.add('open');
+  setTimeout(() => inpName.focus(), 100);
+}
+
+function closeModal() {
+  modal.classList.remove('open');
+  editingId = null;
+  clearErrors();
+}
+
+function validatePhone(raw) {
+  if (!raw) return '';
+  if (!/^\+?\d+$/.test(raw)) return 'Phone can only contain digits and an optional + at the start';
+  const digits = raw.replace(/^\+/, '');
+  if (digits.length < 7 || digits.length > 15) return 'Phone must have between 7 and 15 digits';
+  return '';
+}
+
+function validateEmail(raw) {
+  if (!raw) return '';
+  if (raw.includes(' ')) return 'Email cannot contain spaces';
+  const parts = raw.split('@');
+  if (parts.length !== 2) return 'Email must contain exactly one @';
+  const [local, domain] = parts;
+  if (!local) return 'Email must have text before @';
+  if (!domain || !domain.includes('.')) return 'Email must have a valid domain after @';
+  if (domain.startsWith('.') || domain.endsWith('.')) return 'Email domain cannot start or end with a dot';
+  return '';
+}
+
+function saveContact() {
+  clearErrors();
+  const name = inpName.value.trim();
+  if (!name) { showError(inpName, nameError, 'Name is required'); inpName.focus(); return; }
+
+  const phoneErr = validatePhone(inpPhone.value.trim());
+  if (phoneErr) { showError(inpPhone, phoneError, phoneErr); inpPhone.focus(); return; }
+
+  const emailErr = validateEmail(inpEmail.value.trim());
+  if (emailErr) { showError(inpEmail, emailError, emailErr); inpEmail.focus(); return; }
+
+  const body = {
+    name,
+    phone: inpPhone.value.trim(),
+    email: inpEmail.value.trim(),
+  };
+  const method = editingId ? 'PATCH' : 'POST';
+  const url = editingId ? `/api/contacts/${editingId}` : '/api/contacts';
+
+  api(url, { method, body: JSON.stringify(body) })
+    .then(() => {
+      closeModal();
+      loadContacts();
+    })
+    .catch(e => alert(e.error || 'Error saving contact'));
+}
+
+function deleteContact(id) {
+  if (!confirm('Delete this contact?')) return;
+  api(`/api/contacts/${id}`, { method: 'DELETE' })
+    .then(loadContacts)
+    .catch(e => alert(e.error || 'Error deleting contact'));
+}
+
+addBtn.addEventListener('click', () => openModal());
+cancelBtn.addEventListener('click', closeModal);
+saveBtn.addEventListener('click', saveContact);
+refreshBtn.addEventListener('click', loadContacts);
+
+modal.addEventListener('click', e => {
+  if (e.target === modal) closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && modal.classList.contains('open')) saveContact();
+});
+
+let searchTimer;
+search.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadContacts, 200);
+});
+
+loadContacts();
+</script>
+</body>
+</html>
